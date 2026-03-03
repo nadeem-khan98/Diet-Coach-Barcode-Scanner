@@ -16,8 +16,7 @@ export default function Signup() {
     diseases: [],
   });
 
-  const change = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   // ✅ Handle checkbox diseases
   const handleDiseaseChange = (e) => {
@@ -47,6 +46,7 @@ export default function Signup() {
     <div>
       <h2>Signup</h2>
 
+      <input name="name" placeholder="Full Name" onChange={change} />
       <input name="email" placeholder="Email" onChange={change} />
       <input
         name="password"
@@ -56,7 +56,6 @@ export default function Signup() {
       />
       <input name="age" placeholder="Age" onChange={change} />
       <input name="height" placeholder="Height" onChange={change} />
-      <input name="name" placeholder="Full Name" onChange={change} />
 
       {/* Goal */}
       <select name="goal" onChange={change}>
