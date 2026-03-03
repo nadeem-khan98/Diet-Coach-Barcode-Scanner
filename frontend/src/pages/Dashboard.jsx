@@ -2,17 +2,41 @@ import { useState } from "react";
 import BarcodeScanner from "../components/BarcodeScanner";
 import axios from "axios";
 import API from "../services/api";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
+  const nav = useNavigate();
+
   const [showScanner, setShowScanner] = useState(false);
   const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  // 🔍 when barcode scanned
+  // ✅ Logout
+  const logout = () => {
+    localStorage.removeItem("token");
+    nav("/");
+  };
+
+  // ✅ Handle Barcode Scan
   const handleScan = async (barcode) => {
+    if (!barcode) return;
+
     try {
+      setLoading(true);
+      setError("");
+      setProduct(null);
+
       const res = await axios.get(
         `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`
       );
+
+      // 🔍 Check if product exists
+      if (res.data.status !== 1) {
+        setError("Product not found.");
+        setLoading(false);
+        return;
+      }
 
       const p = res.data.product;
 
@@ -25,11 +49,16 @@ export default function Dashboard() {
       };
 
       setProduct(data);
+      setShowScanner(false); // close scanner
 
-      // save to backend
+      // 💾 Save to backend
       await API.post("/scan/save", data);
+
     } catch (err) {
+      setError("Scan failed. Try again.");
       console.log(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -37,12 +66,13 @@ export default function Dashboard() {
     <div style={{ padding: "20px" }}>
       <h2>Dashboard</h2>
 
-      {/* ✅ Scan Button */}
+      {/* Scan Button */}
       <button onClick={() => setShowScanner(true)}>
         Scan Product
       </button>
+      <button onClick={logout}>Logout</button>
 
-      {/* ✅ Show scanner only when clicked */}
+      {/* Scanner */}
       {showScanner && (
         <BarcodeScanner
           onScan={handleScan}
@@ -50,7 +80,13 @@ export default function Dashboard() {
         />
       )}
 
-      {/* ✅ Product Result */}
+      {/* Loading */}
+      {loading && <p>Scanning product...</p>}
+
+      {/* Error */}
+      {error && <p style={{ color: "red" }}>{error}</p>}
+
+      {/* Product Result */}
       {product && (
         <div style={{ marginTop: "20px" }}>
           <h3>{product.productName}</h3>
